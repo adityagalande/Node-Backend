@@ -1,0 +1,20 @@
+{
+  "name": "node-backend",
+  "version": "1.0.0",
+  "description": "Complete backend for MERN",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "backend",
+    "javascript",
+    "express",
+    "mongodb",
+    "mongoose"
+  ],
+  "author": "Aditya Galande",
+  "license": "ISC"
+}
