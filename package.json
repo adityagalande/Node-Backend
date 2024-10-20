@@ -16,5 +16,8 @@
     "mongoose"
   ],
   "author": "Aditya Galande",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
 }
