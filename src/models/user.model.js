@@ -74,7 +74,7 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-//METHODS: we can write any number methods in our schema....
+//METHODS: we can write (add) any number methods in our schema....
 // Instance method to check if a provided password matches the stored hash
 userSchema.methods.isPasswordCorrect = async function (password) {
   // Uses bcrypt to compare the plain-text password with the hashed password
@@ -83,9 +83,10 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 
 // Method to generate a short-lived access token for the user
 userSchema.methods.generateAccessToken = function () {
+  // jwt have sign method -> (payload, secrectKey, expiary)
   return jwt.sign(
     {
-      _id: this._id, // Embed the user's ID in the token payload
+      _id: this._id, // Embed the user's ID in the token payload (get _id feom mongoDB)
       email: this.email, // Embed the user's email in the token payload
       userName: this.username, // Embed the username in the token payload
       fullName: this.fullname, // Embed the full name in the token payload

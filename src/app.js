@@ -6,6 +6,8 @@ import cookieParser from "cookie-parser";
 // Create an instance of the Express application
 const app = express();
 
+//we use "app.use" when using middleware or configuration
+
 // Set up CORS middleware to allow cross-origin requests
 app.use(
   cors({
@@ -14,7 +16,7 @@ app.use(
   })
 );
 
-// Parse incoming JSON requests with a maximum body size limit
+// Parse incoming JSON requests with a maximum body size limit (it is from form)
 app.use(
   express.json({
     limit: "16kb", // Limits JSON payloads to 16KB to prevent large requests
@@ -33,7 +35,7 @@ app.use(
 app.use(express.static("public")); // Used for serving temporary files or static assets
 
 // Parse cookies attached to client requests
-app.use(cookieParser()); // Enables reading cookies from the client and making them available in req.cookies
+app.use(cookieParser()); // Enables reading/access or set cookies cookies from the client and making them available in req.cookies
 
 // Export the app instance for use in other parts of the application
 export { app };

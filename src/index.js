@@ -22,6 +22,7 @@ connectDB()
       console.error(`Error in app listening: ${error}`);
     });
 
+    //after creating express in app.js
     // Start the server and listen on the specified port
     app.listen(port, () => {
       console.log(`⚙️ Server is running at port : ${port}`);
