@@ -43,7 +43,7 @@ import userRouter from "./routes/user.routes.js"
 
 // Routes declaration
 // app.use("/users", userRouter);
-app.use("/api/v1/users", userRouter); //instead of app.get() we are using app.use() bcoz we have seperated controller & routes.(https://localhost:8000/api/v1/users/register)
+app.use("/api/v1/users", userRouter); //instead of app.get() we are using app.use() bcoz we have seperated controller & routes.(http://localhost:8000/api/v1/users/register )
 
 
 // Export the app instance for use in other parts of the application
