@@ -15,7 +15,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 //1.get user details from frontend
 //2.validate incoming data - "note empty", email etc...
 //3.if user already existes: based on username or email
-//4.check for images & hceck for Avatar
+//4.check for images & check for Avatar
 //5.upload them to cloudinary using cloudinary utility & and take url from response
 //6.create user object - create entry in DB
 //7.remove password & refresh token field from DB response
@@ -26,7 +26,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //----------Get user details from Frontend----------
   //use req.body if data is coming from json or form
   const { fullName, email, username, password } = req.body;
-  console.log(`email: ${email} \n username: ${username}`);
+  // console.log(`email: ${email} \n username: ${username}`);
 
   //---------------Validation of fields---------------
   // if(fullName === ""){
@@ -39,12 +39,13 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new apiErrors(400, "All fields are required");
   }
 
-  if (email.contains("@") !== true) {
-    throw new apiErrors(400, "Please enter correct email");
-  }
+  // console.log(req.body);
+  // if (email.contains("@") !== true) {
+  //   throw new apiErrors(400, "Please enter correct email");
+  // }
 
   // ---------------If user exists---------------
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }], //this check if it find username or email in DB (whichever finds first)
   });
 
@@ -55,7 +56,18 @@ const registerUser = asyncHandler(async (req, res) => {
   // ---------------If File exists in multer---------------
   //Multer Middleware gives files access bcoz we placed middleware in user.routes.js
   const avatarLocalPath = req.files?.avatar[0]?.path; //first property[0].path gives multer taken path
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+  let coverImageLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
+
+  // console.log(req.files);
 
   if (avatarLocalPath.trim() == "" || !avatarLocalPath) {
     throw new apiErrors(400, "Please upload Avatar image");
@@ -64,6 +76,9 @@ const registerUser = asyncHandler(async (req, res) => {
   // ---------------Upload to Cloudinary---------------
   const avatarCloudinary = await uploadOnCloudinary(avatarLocalPath); //we get whole response make sure to take url whereever needed
   const coverImageCloudinary = await uploadOnCloudinary(coverImageLocalPath);
+
+  // console.log("cloudinary");
+  // console.log(avatarCloudinary);
 
   // ---------------Check file is uploaded on Cloudinary---------------
   if (!avatarCloudinary) {

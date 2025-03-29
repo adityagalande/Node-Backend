@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
         "Please fill a valid email address",
       ],
     },
-    fullname: {
+    fullName: {
       type: String,
       required: true, // Full name is mandatory
       trim: true, // Removes leading and trailing whitespace
