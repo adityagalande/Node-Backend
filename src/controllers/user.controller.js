@@ -11,7 +11,29 @@ import { apiResponse } from "../utils/apiResponse.js";
 //   });
 // });
 
-// ----------------STEPS--------------------
+const generateAccessAndRefreshToken = async (userId) => {
+  try {
+    const user = await User.findById(userId); //find user based on ID
+    console.log("user from tokens->");
+    console.log(user);
+    const accessToken = user.generateAccessToken(); //generate both tokens
+    const refreshToken = user.generateRefreshToken();
+
+    //save(put) refresh token in db
+    user.refreshToken = refreshToken;
+    //the mongoDb save methd is present in user model obj bcoz this user geted from MongoDb itself
+    await user.save({ validateBeforeSave: false }); //we have to put "validateBeforeSave" coz userModel have some fields mandatory such as password, and this can ommit that mandate
+
+    return { accessToken, refreshToken }; //return access & refresh token to use ferther such as giving to client side
+  } catch (error) {
+    throw new apiErrors(
+      500,
+      "something went wrong! while generating access & refresh token"
+    );
+  }
+};
+
+// ----------------STEPS FOR REGISTER--------------------
 //1.get user details from frontend
 //2.validate incoming data - "note empty", email etc...
 //3.if user already existes: based on username or email
@@ -111,4 +133,84 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, createdUser, "User created successfully"));
 });
 
-export { registerUser };
+// ----------------STEPS FOR LOGIN--------------------
+//1.get user details from frontend.
+//2.validate incoming data - "note empty", username, password etc...
+//3.check if user exists in system or not by checking username.
+//4.Validate password.
+//5.Access & Refresh token generate
+//6.Send tokens in secure cookies to client
+//7.return response.
+
+const loginUser = asyncHandler(async (req, res) => {
+  //1.Get data from frontend
+  const { email, username, password } = req.body; //object destructuring of username and password from request body
+
+  //2.Check fields are not empty
+  if (!email || !username || !password) {
+    throw new apiErrors(400, "username or password is required");
+  }
+
+  //3.Check if user exists in DB already by checking username
+  // const existingUser = await User.findOne({ username: username });
+  const existingUser = await User.findOne(
+    $or[({ username: username }, { email: email })]
+  ); //this or that must be present in db
+  if (!existingUser) {
+    throw new apiErrors(404, "user does not exists");
+  }
+
+  //4.Validate password with mongodb credentials
+  const isPasswordValid = await existingUser.isPasswordCorrect(password); //the user model methods are available in the user which we get from DB, which is existingUser not User(this one is mongoose user it has methods like findOne...etc but not which we created in user model)
+  if (!isPasswordValid) {
+    throw new apiErrors(401, "Invalid user credentials");
+  }
+
+  //5.Access & Refresh token generate
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    existingUser._id
+  );
+  const loggedInUser = await User.findById(existingUser._id).select(
+    "-password -refreshToken"
+  ); //nigate these 2 fields from return user object
+
+  //6.Send tokens in secure cookies to client
+  const options = {
+    httpOnly: true,
+    secure: true, //by doing httpOnly & secure : true (no one can able to modify cookies from client-side, it only modifiable from server-side)
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new apiResponse(
+        200,
+        { user: loggedInUser, accessToken, refreshToken },
+        "User logged-In Successfully"
+      )
+    );
+});
+
+const logoutUser = asyncHandler(async (req, res) => {
+  //here we will have access to req.user bcoz we have added middleware "auth" in "logoutUser route", and same thing will happens for multer middleware for "req.file".
+  await User.findByIdAndUpdate(
+    req.user._id,
+    { $set: { refreshToken: undefined } },
+    { new: true } //bcoz of this we will get latest response which has refresh token ndefined seted.
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie(accessToken, options)
+    .clearCookie(refreshToken, options)
+    .json(new apiErrors(200, {}, "User logged-out successfully"));
+});
+
+export { registerUser, loginUser, logoutUser };
